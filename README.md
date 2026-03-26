@@ -13,7 +13,41 @@ Repository folder name: `theme-agent` (clone or copy this repo into a folder wit
 
 ## Install
 
-### Cursor
+### Via `npx skills` ([skills.sh](https://skills.sh/))
+
+This skill is a standard [Agent Skill](https://agentskills.io) with `SKILL.md` at the repo root, so it installs with the open [`skills` CLI](https://github.com/vercel-labs/skills):
+
+```bash
+npx skills add <github-owner>/theme-agent
+```
+
+Replace `<github-owner>` with the GitHub user or organization that hosts this repository (public repo required).
+
+**Examples:**
+
+- List what will be installed without installing yet:
+
+  ```bash
+  npx skills add <github-owner>/theme-agent --list
+  ```
+
+- Install for **Cursor** only (non-interactive):
+
+  ```bash
+  npx skills add <github-owner>/theme-agent -a cursor -y
+  ```
+
+- Install **globally** (`-g`) so the skill is available in every project; the CLI prints the destination path (for Cursor, often under `~/.agents/skills/` or `~/.cursor/skills/` per your [skills CLI](https://github.com/vercel-labs/skills) version):
+
+  ```bash
+  npx skills add <github-owner>/theme-agent -g -a cursor -y
+  ```
+
+The CLI copies or symlinks the skill folder; `reference/` is included alongside `SKILL.md`.
+
+Discoverability on the [skills.sh leaderboard](https://skills.sh/) comes from anonymous install telemetry from the CLI, not a separate signup ([docs](https://skills.sh/docs)). Opt out of telemetry: `DISABLE_TELEMETRY=1`.
+
+### Manual install (Cursor)
 
 Copy or clone this repository into your project or global skills folder:
 
@@ -27,6 +61,8 @@ Ensure `SKILL.md` lives at `.../theme-agent/SKILL.md`.
 Many tools expect `SKILL.md` under a named folder, for example:
 
 - `./.agents/skills/theme-agent/`
+
+The `npx skills add` command can target [many agents](https://github.com/vercel-labs/skills#supported-agents); use `-a <agent>` to choose.
 
 ### LobeHub marketplace
 
@@ -45,13 +81,16 @@ Replace `<owner-repo>` with the marketplace identifier once published.
 
 ## Publishing
 
-1. Create a new **public** repository on GitHub (e.g. `theme-agent`) and push this tree:
+1. Create a **public** repository on GitHub (e.g. `theme-agent`) and push this tree:
 
    ```bash
-   git remote add origin https://github.com/<you>/<repo>.git
+   git remote add origin https://github.com/<you>/theme-agent.git
    git push -u origin main
+   git tag v1.0.0
    git push origin v1.0.0
    ```
+
+   After the repo is public, others can run `npx skills add <you>/theme-agent` as above.
 
 2. **LobeHub** or other marketplaces: follow their contributor flow (often linking the GitHub repo and using `@lobehub/market-cli` or the site UI). This repo may be tagged at `v1.0.0` for versioned installs.
 
