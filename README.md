@@ -9,9 +9,7 @@ Repository folder name: `theme-agent` (clone or copy this repo into a folder wit
 | File | Purpose |
 |------|---------|
 | [SKILL.md](SKILL.md) | Instructions for AI agents (YAML frontmatter + workflow) |
-| [reference/block-reference.md](reference/block-reference.md) | Block types under `blocks/` (layout, content, wrappers) |
 | [reference/shopify-json.md](reference/shopify-json.md) | Concepts, template filenames, links to Shopify documentation |
-| [examples/minimal-templates.md](examples/minimal-templates.md) | Generic JSON examples (illustrative section types) |
 
 ## Install
 

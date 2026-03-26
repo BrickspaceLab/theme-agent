@@ -210,8 +210,6 @@ _g__grid-item
 
 ## Further reading in this package
 
-- [reference/block-reference.md](reference/block-reference.md) — Layout and content blocks, wrappers, compatibility
 - [reference/shopify-json.md](reference/shopify-json.md) — Official docs links, filenames, platform limits
-- [examples/minimal-templates.md](examples/minimal-templates.md) — Generic section-level examples (verify types against the target theme)
 
 In a **theme repository**, also use project rules such as `templates.mdc`, `blocks.mdc`, and `schemas.mdc` when present under `.cursor/rules/`.
