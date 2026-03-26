@@ -1,0 +1,47 @@
+# shopify-theme-json-skill
+
+Agent skill for authoring **Shopify Online Store 2.0** JSON templates (`templates/*.json`): discover section and block types from the theme on disk, align settings with Liquid `{% schema %}`, and emit valid template JSON.
+
+## Contents
+
+| File | Purpose |
+|------|---------|
+| [SKILL.md](SKILL.md) | Instructions for AI agents (YAML frontmatter + workflow) |
+| [reference/shopify-json.md](reference/shopify-json.md) | Concepts, template filenames, links to Shopify documentation |
+| [examples/minimal-templates.md](examples/minimal-templates.md) | Generic JSON examples (illustrative section types) |
+
+## Install
+
+### Cursor
+
+Copy or clone this repository into your project or global skills folder:
+
+- Project: `<project>/.cursor/skills/shopify-theme-json-skill/`
+- Or follow [Cursor Agent Skills](https://cursor.com/docs) for the path your setup expects.
+
+Ensure `SKILL.md` lives at `.../shopify-theme-json-skill/SKILL.md`.
+
+### Codex / other agents
+
+Many tools expect `SKILL.md` under a named folder, for example:
+
+- `./.agents/skills/shopify-theme-json-skill/`
+
+### LobeHub marketplace
+
+If this skill is published there, install with the marketplace CLI (see [LobeHub Skills](https://lobehub.com/skills)) and your agent’s `--agent` flag, for example:
+
+```bash
+npx -y @lobehub/market-cli skills install <owner-repo> --agent cursor
+```
+
+Replace `\<owner-repo\>` with the marketplace identifier once published.
+
+## Scope
+
+- **In scope:** JSON templates under `templates/`, section `type` / block `type` strings that exist in **that** theme, settings keys defined in section schemas.
+- **Out of scope:** Store credentials, `config/settings_data.json` theme-setup setups (unless you extend the skill), Checkout UI extensions, Theme app extension bundles.
+
+## License
+
+[MIT](LICENSE)
