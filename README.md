@@ -7,7 +7,7 @@ It covers **JSON templates** (`templates/*.json`), **theme blocks** and section 
 Install:
 
 ```bash
-npx skills add BrickspaceLab/theme-agent
+npx skills add BrickspaceLab/theme-builder
 ```
 
 Use it **on a case-by-case basis** rather than everywhere. Good moments: editing or adding a JSON template, wiring nested blocks to match a layout, reconciling a Figma or screenshot with what your theme actually exposes, or reviewing template JSON before commit.
