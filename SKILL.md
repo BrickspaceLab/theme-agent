@@ -154,7 +154,7 @@ Run the **Validation checklist** below before finishing.
 
 | File                                                   | Purpose                                             |
 | ------------------------------------------------------ | --------------------------------------------------- |
-| [reference/shopify-json.md](reference/shopify-json.md) | Official docs links, filenames, platform limits     |
+| [reference/shopify.md](reference/shopify.md) | Official docs links, filenames, platform limits     |
 | [examples/README.md](examples/README.md)               | How to pick a bundled theme example; index of files |
 
 
