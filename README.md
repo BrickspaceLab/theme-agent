@@ -1,6 +1,6 @@
 # theme skill
 
-Theme Builder is a skill for **designers and developers** who work in **Shopify Online Store 2.0** themes and want the agent to ship real structure—not invented block names or settings that do not exist in the theme you are editing.
+Theme Skill is a skill for **designers and developers** who work in **Shopify Online Store 2.0** themes and want the agent to ship real structure—not invented block names or settings that do not exist in the theme you are editing.
 
 Install:
 
