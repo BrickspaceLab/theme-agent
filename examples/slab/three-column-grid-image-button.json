@@ -27,6 +27,48 @@
         }
       },
       "block_order": ["image_1", "button_1"]
+    },
+    "grid_item_2": {
+      "type": "_g__grid-item",
+      "blocks": {
+        "image_2": {
+          "type": "image",
+          "settings": {
+            "enable_x_padding": false,
+            "enable_t_padding": false,
+            "enable_b_padding": false
+          }
+        },
+        "button_2": {
+          "type": "g__button",
+          "settings": {
+            "url": "/collections/all",
+            "enable_x_padding": false
+          }
+        }
+      },
+      "block_order": ["image_2", "button_2"]
+    },
+    "grid_item_3": {
+      "type": "_g__grid-item",
+      "blocks": {
+        "image_3": {
+          "type": "image",
+          "settings": {
+            "enable_x_padding": false,
+            "enable_t_padding": false,
+            "enable_b_padding": false
+          }
+        },
+        "button_3": {
+          "type": "g__button",
+          "settings": {
+            "url": "/collections/all",
+            "enable_x_padding": false
+          }
+        }
+      },
+      "block_order": ["image_3", "button_3"]
     }
   },
   "block_order": ["grid_item_1", "grid_item_2", "grid_item_3"]
