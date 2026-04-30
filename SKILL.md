@@ -33,9 +33,10 @@ If the theme uses a **build step** that generates JSON templates or settings dat
 4. **(Optional) Check bundled examples** — If `examples/` is present, follow **Choosing the best example to reference** in [examples/README.md](examples/README.md): compare the workspace theme to each indexed example and open at most one best-matched file. If nothing fits, copy patterns from existing `templates/*.json` in the workspace theme instead. Never emit `type` strings from a bundled example until they appear in the target theme’s allowed set.
 5. **Map to real blocks** — Choose types only from that allowed set; resolve section `type` from existing `sections/*.liquid` for template-level JSON.
 6. **Analyze schemas** — Read each existing block or section `{% schema %}` for allowed children, setting IDs, types, defaults, and presets.
-7. **Apply theme design settings** — Map colors, typography, spacing, borders, and behavior to real global/section/block settings declared by the target theme.
-8. **Compile JSON** — Build valid `sections`, nested `blocks`, and `order` / `block_order` arrays per Shopify’s template structure.
-9. **Validate** — Run the checklist and JSON-focused Theme Check before finishing.
+7. **Build a settings ledger** — Before writing JSON, record the schema constraints for every setting you plan to emit.
+8. **Apply theme design settings** — Map colors, typography, spacing, borders, and behavior to real global/section/block settings declared by the target theme.
+9. **Compile JSON** — Build valid `sections`, nested `blocks`, and `order` / `block_order` arrays per Shopify’s template structure.
+10. **Validate by strict upload** — Skip Theme Check for JSON template edits; use Shopify's strict upload validator before finishing.
 
 ## Workflow
 
@@ -102,8 +103,23 @@ For each block or section, read `{% schema %}`:
 2. **Settings** — Required vs optional, defaults, types. Pay attention to:
    - **`range`** — Values must land exactly on `min + (N * step)`, where `N` is a whole number, even when the setting is hidden by `visible_if`. A range with `min: 10, max: 48, step: 2` rejects `13` (use `14`). A range with `min: 100, step: 5` rejects `158` (use `160` or `155`). When copying or inventing settings, calculate the nearest valid step before writing JSON.
    - **`select`** — Values must exactly match one of the `options[].value` strings. Do not invent values even if they look like valid CSS—only the listed options pass validation.
-   - **`visible_if`** — Settings gated by `visible_if` may still be validated even when hidden. Prefer omitting them entirely rather than setting values that won't take effect (e.g. don't set `font_size` when `type_preset != 'custom'`).
+   - **`visible_if`** — Settings gated by `visible_if` may still be validated during upload even when hidden. Prefer omitting hidden custom-only settings entirely unless the controlling setting makes them active. If you keep hidden settings as editor defaults, they must still satisfy the destination schema's range and select constraints.
 3. **Presets** — Recommended configurations.
+
+### Build a schema settings ledger before writing JSON
+
+For every section or block type you will emit, collect the schema constraints for every setting you plan to set. Do this before drafting or modifying the JSON so invalid values do not make it into the template.
+
+- **`range`** — Record `min`, `max`, and `step`; normalize every value to `min + (N * step)`.
+- **`select`** — Record exact `options[].value` strings and use only those values.
+- **Typed settings** — Record expected JSON value types for `checkbox`, `number`, `text`, `richtext`, `image_picker`, `url`, `collection`, `product`, `blog`, and `page`.
+- **`visible_if` settings** — Do not skip validation. Shopify may validate hidden settings during upload, so omit hidden custom-only settings or normalize them too.
+
+When using this theme's generic blocks, common upload-only range traps include:
+
+- Section and layout spacing such as `spacing_top` and `spacing_bottom` often use `step: 5`.
+- Image and container `width` often use `step: 5`.
+- Rich text `font_size_custom` uses even values (`step: 2`), and `line_height_custom` must be at least `100` and use `step: 5`.
 
 ### Step 6 — Apply theme design controls
 
@@ -177,6 +193,14 @@ Follow Shopify’s JSON template shape. If the theme ships **Cursor rules** (e.g
 - Prefer translation keys for block `name` when the theme does: e.g. `"t:blocks.image"`.
 - Align color and spacing settings with the theme’s design system.
 
+**Whole-template replacement guard:**
+
+After replacing an entire JSON template, parse the file with Shopify's generated-file comment header stripped and verify there is exactly one top-level JSON object. Do not leave an appended copy of the previous template after the new closing brace.
+
+```sh
+node -e "const fs=require('fs'); const s=fs.readFileSync('templates/index.json','utf8').replace(/^\/\*[\s\S]*?\*\/\s*/, ''); JSON.parse(s);"
+```
+
 **Richtext content rules:**
 
 Shopify sanitizes HTML in `richtext` and `text` (rich) settings. Only a limited set of tags and attributes are allowed:
@@ -190,27 +214,35 @@ Shopify sanitizes HTML in `richtext` and `text` (rich) settings. Only a limited 
 
 Run the **Validation checklist** below before finishing.
 
-For JSON template edits, also run JSON-focused Theme Check from the **theme root**:
+For JSON template edits, skip `shopify theme check` and validate with Shopify's upload validator instead:
 
 ```sh
-shopify theme check --config .json-check.yml --fail-level error --output json --no-color
+shopify theme push --strict --only templates/<name>.json
 ```
 
-Inspect the JSON output for offenses whose `path` is the changed template (for example, `templates/index.json`) and fix those before finishing. Do not use `--path templates/index.json` to check a single file: Shopify CLI treats `--path` as the theme root and will look for sibling theme directories like `locales/` under that path. If unrelated files report warnings or errors, do not change them unless they block the requested template upload.
-
-Some JSON-template validations are enforced by Shopify only during upload (for example, invalid custom CSS values, range-step violations, invalid block IDs, and static blocks listed in `block_order`). When a store connection is available, run an upload-scoped validation after local checks:
+For the homepage, use:
 
 ```sh
 shopify theme push --strict --only templates/index.json
 ```
 
-This is not a dry run; it uploads the specified file if validation passes. Use it only when uploading that template is acceptable. If it fails, copy the exact console error into the validation checklist and add a local guard for that class of error before retrying.
+This is not a dry run; it uploads the specified file if validation passes. Use it only when uploading that template is acceptable.
+
+For non-interactive agents, avoid the theme-selection prompt. If `npm run dev` or `shopify theme dev` is already running, inspect its output for `preview_theme_id=<theme_id>` and validate against that same development theme:
+
+```sh
+shopify theme push --strict --only templates/<name>.json --theme <theme_id>
+```
+
+If no theme ID is available and the command would prompt for a theme, ask the user which theme to target before pushing.
+
+Treat any `templates/<name>.json` error printed after `Theme upload complete` as authoritative, even when the command exits `0`. If it fails, copy the exact console error into the validation checklist and add a local guard for that class of error before retrying.
 
 When `npm run dev` or `shopify theme dev` is already running, use its upload log as the practical validation loop for JSON template edits:
 
 1. Save or touch the edited template so the dev server attempts to sync it.
 2. Inspect the dev terminal for `Failed to upload file "templates/<name>.json" to remote theme`.
-3. Treat the message below that line as authoritative Shopify validation, even if Theme Check passed.
+3. Treat the message below that line as authoritative Shopify validation.
 4. Fix the specific class of error and add it to this skill/checklist if it is not already covered.
 5. Repeat until the dev terminal reports a successful sync or no new upload error for the template.
 
@@ -218,10 +250,12 @@ Do not start a duplicate dev server if one is already running. Prefer the existi
 
 - `Invalid CSS value`: custom CSS array entries must be complete CSS rules with selectors, not standalone declarations.
 - `Setting '<id>' must be a step in the range`: range settings must use exact `min + (N * step)` values, including settings hidden by `visible_if`.
+- `Setting '<id>' can't be less than <min>` or `can't be greater than <max>`: range settings must stay inside schema bounds, including hidden settings.
 - `'<id>' is not a valid block id`: block instance IDs must not use invalid characters or leading `_`.
 - `static block with id '<id>' must not be present in 'block_order'`: remove static block IDs from sibling `block_order`.
 
 - JSON is valid
+- Whole-template replacements contain exactly one top-level JSON object after stripping Shopify's generated-file comment header; do not leave appended duplicate template content after the closing brace.
 - Section and block instance IDs are unique in scope
 - Block instance IDs do not start with `_`; only block `type` strings may use private `_` prefixes
 - Every `block_order` matches the keys in its sibling `blocks` object
@@ -246,6 +280,8 @@ Do not start a duplicate dev server if one is already running. Prefer the existi
 | `_` block not allowed   | Block has `_` prefix; choose an existing allowed block or report that schema/Liquid work is outside this JSON-only skill |
 | `style` attr stripped   | Shopify sanitizes richtext; use schema-defined text settings where available; otherwise note the theme-code customization gap |
 | Range step violation    | Read the schema `step` value; round your value to the nearest valid step       |
+| Hidden range violation  | Omit hidden custom-only settings or validate them anyway; for example, `font_size_custom` odd values fail when `step` is `2` |
+| Range min/max violation | Keep values within schema bounds; for example, `line_height_custom` must be at least `100` when the schema says `min: 100` |
 | Invalid select value    | Only use values from the schema `options` array; don't invent CSS expressions  |
 | Mockup image copied     | Remove screenshot-derived image values; preserve the layout with valid empty image/media blocks |
 | Schema too large        | Copy patterns from a working template in the same theme          |

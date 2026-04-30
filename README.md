@@ -15,3 +15,4 @@ Update my index.json template with...
 ```
 Use the screenshot and create a new page.about.json template
 ```
+
