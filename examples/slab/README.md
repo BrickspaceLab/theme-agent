@@ -59,7 +59,7 @@ When the theme repo is open, listing `blocks/` is the source of truth for every 
 
 ## Design controls
 
-Slab exposes most visual changes through schema settings. Prefer these settings over arbitrary `custom_css`. Read the relevant schema first and only emit setting keys and values that exist there.
+Slab exposes most visual changes through schema settings. Prefer these existing settings over arbitrary `custom_css`. Read the relevant schema first and only emit setting keys and values that exist there. Do not create or edit Liquid, blocks, sections, snippets, stylesheets, or other theme code when using this skill.
 
 ### Global design settings (`config/settings_data.json`)
 
@@ -84,7 +84,7 @@ Slab exposes most visual changes through schema settings. Prefer these settings 
 - `gap_size` options are schema values (`none`, `default`, `xs`, `sm`, `md`, `lg`, `xl`). Do not invent pixel strings.
 - `color_scheme` values must be exact schema utility strings such as `color-bg__body-bg color-tx__text-default`, `color-bg__overlay-1 color-tx__text-default`, `color-bg__shade-1 color-tx__text-default`, or `bg-transparent`.
 - `color_border` and `border_position` must use exact schema class strings. Use `border-0!` for no border when that option exists; otherwise use a listed divider/border class.
-- `custom_css` entries must be complete CSS rules with selectors, e.g. `.rte { text-transform: uppercase; }`. Do not use standalone declarations like `--color__scheme-bg: transparent;` or selectorless rules like `{ background: ... }`.
+- Use `custom_css` only when it is already exposed as a JSON setting and the user explicitly asks for a CSS-level tweak. Entries must be complete CSS rules with selectors, e.g. `.rte { text-transform: uppercase; }`. Do not use standalone declarations like `--color__scheme-bg: transparent;` or selectorless rules like `{ background: ... }`.
 
 ### Block settings (`blocks/*.liquid`)
 

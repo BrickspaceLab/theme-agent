@@ -1,31 +1,41 @@
 ---
 name: theme-skill  
-description: Edits Shopify JSON template files using your theme's actual block and section types. Just describe what you want or drop in a screenshot.
+description: Edits Shopify JSON template files using your theme's actual existing block and section types. This is for JSON-only updates, not custom Liquid.
 ---
+
+## Core constraint — JSON edits only
+
+This skill is for updating, editing, and tweaking Shopify **JSON**: `templates/*.json`, JSON section data, `config/settings_data.json`, and schema-defined section/block settings inside those JSON files.
+
+Agents using this skill must **not write, create, or modify custom Liquid**. Do not add new files under `sections/`, `blocks/`, `snippets/`, `assets/`, or other theme code paths. Do not create new section types, block types, snippets, JavaScript, stylesheets, or Liquid schema to make a design possible.
+
+Use only **existing** sections, blocks, nested block structures, and settings already provided by the target theme. If the requested design cannot be represented with the theme's existing JSON templates, section types, block types, and schema settings, state the gap and propose the closest JSON-only result.
 
 ## When to use
 
 Use when the task involves Shopify **JSON templates** under `templates/` (e.g. `product.json`, `index.json`, alternates like `page.contact.json`), **section JSON** that references **theme blocks** from `blocks/` in block-based themes, or theme design settings that can be safely expressed through `config/settings_data.json`, section settings, or block settings.
 
-**This skill alone does not fully cover:**
+**This skill does not cover:**
 
 - `config/settings_schema.json` schema development
 - Checkout branding or Checkout UI extensions
 - Theme app extension code under `extensions/`
+- Creating or editing **Liquid** `.liquid` files, including new sections, blocks, snippets, schemas, or theme assets
 - Replacing **Liquid** `.liquid` templates where the theme has not adopted JSON for that route
 
-If the theme uses a **build step** that generates `sections/` or `blocks/`, read that theme’s README and follow its source-of-truth paths before editing compiled output.
+If the theme uses a **build step** that generates JSON templates or settings data, read that theme’s README and edit the JSON/settings source of truth. If the source of truth is Liquid, JavaScript, CSS, or schema code, report that the task is outside this JSON-only skill.
 
 ## Quick start
 
 1. **Understand requirements** — Parse prompts or images for layout, columns/rows, content types, and styling (see **Design images and mockups** when the input is visual).
-2. **Discover allowed block types** — List `blocks/` and read parent `{% schema %}` so every `type` you use exists in this theme (required; see below).
-3. **(Optional) Check bundled examples** — If `examples/` is present, follow **Choosing the best example to reference** in [examples/README.md](examples/README.md): compare the workspace theme to each indexed example and open at most one best-matched file. If nothing fits, copy patterns from existing `templates/*.json` in the workspace theme instead. Never emit `type` strings from a bundled example until they appear in the target theme’s allowed set.
-4. **Map to real blocks** — Choose types only from that allowed set; resolve section `type` from `sections/*.liquid` for template-level JSON.
-5. **Analyze schemas** — Read each block or section `{% schema %}` for allowed children, setting IDs, types, defaults, and presets.
-6. **Apply theme design settings** — Map colors, typography, spacing, borders, and behavior to real global/section/block settings declared by the target theme.
-7. **Compile JSON** — Build valid `sections`, nested `blocks`, and `order` / `block_order` arrays per Shopify’s template structure.
-8. **Validate** — Run the checklist and JSON-focused Theme Check before finishing.
+2. **Stay JSON-only** — Treat existing Liquid schemas as read-only references. Edit Shopify JSON only.
+3. **Discover allowed block types** — List `blocks/` and read parent `{% schema %}` so every `type` you use exists in this theme (required; see below).
+4. **(Optional) Check bundled examples** — If `examples/` is present, follow **Choosing the best example to reference** in [examples/README.md](examples/README.md): compare the workspace theme to each indexed example and open at most one best-matched file. If nothing fits, copy patterns from existing `templates/*.json` in the workspace theme instead. Never emit `type` strings from a bundled example until they appear in the target theme’s allowed set.
+5. **Map to real blocks** — Choose types only from that allowed set; resolve section `type` from existing `sections/*.liquid` for template-level JSON.
+6. **Analyze schemas** — Read each existing block or section `{% schema %}` for allowed children, setting IDs, types, defaults, and presets.
+7. **Apply theme design settings** — Map colors, typography, spacing, borders, and behavior to real global/section/block settings declared by the target theme.
+8. **Compile JSON** — Build valid `sections`, nested `blocks`, and `order` / `block_order` arrays per Shopify’s template structure.
+9. **Validate** — Run the checklist and JSON-focused Theme Check before finishing.
 
 ## Workflow
 
@@ -53,7 +63,7 @@ When the user provides a screenshot, Figma export, or design mockup:
 - **Use empty image blocks or sections:** when the design calls for hero, product, lifestyle, logo, or decorative imagery, add the valid image/media block or section with its image setting omitted or blank. Assume the user or merchant will provide final images in the theme editor.
 - **Only wire explicit assets:** set image/media values only when the user provides existing theme asset filenames, Shopify media IDs/references, already-selected section settings, or files they explicitly ask to use as storefront assets.
 - **Do not infer** concrete Shopify `type` strings, setting keys, or enum values from the image alone. **Always** reconcile with **Discover allowed block types** on the target theme.
-- **Limits:** JSON templates do not express every visual detail. Arbitrary typography, one-off CSS, or global palette changes may require **theme settings**, **section settings**, or **custom CSS** outside the core JSON-template workflow—say so when the design cannot be matched with schema-defined settings only.
+- **Limits:** JSON templates do not express every visual detail. Arbitrary typography, one-off CSS, new markup, or new behavior may require Liquid/theme-code development outside this skill. Do not implement that code here; say so when the design cannot be matched with existing schema-defined JSON settings only.
 - If the design **cannot** be built with the theme’s available blocks and settings, **state the gap** and offer the closest achievable structure.
 
 ### Step 2 — Discover allowed block types
@@ -64,9 +74,9 @@ Do this **before** naming or emitting any `type` in JSON. This is the operationa
 2. **Read** `{% schema %}` on each **section** you add or edit in the template, and on each **block** file you nest. Collect every block `type` the parent allows (specific types, `@theme`, `@app`, etc., per Shopify rules for that parent).
    - Validate **each immediate parent/child edge**, not just whether a block exists somewhere in the theme. If a layout block only allows specific item-wrapper blocks, content blocks cannot be direct children even when they are valid theme blocks elsewhere. They must be nested under an allowed child if that child permits them.
    - Treat explicit `blocks` arrays as allow-lists. Only `@theme` permits general theme blocks; a specific list permits only those listed types plus any listed `@app`.
-   > **`_`-prefix caveat:** Blocks whose filename starts with `_` (e.g. `_stat-bar.liquid`) may **not** be matched by `@theme` in a parent schema, even if they have `presets`. Shopify theme check treats `_`-prefixed blocks as private/static and may require them to be **explicitly listed** in the parent’s `blocks` array. Before nesting a `_`-prefixed block inside a parent that only declares `@theme`, verify by checking existing templates or presets for a precedent. If none exists, the parent schema needs a new `{ "type": "_block-name" }` entry—which is a Liquid edit, not a JSON-only change.
+   > **`_`-prefix caveat:** Blocks whose filename starts with `_` (e.g. `_stat-bar.liquid`) may **not** be matched by `@theme` in a parent schema, even if they have `presets`. Shopify theme check treats `_`-prefixed blocks as private/static and may require them to be **explicitly listed** in the parent’s `blocks` array. Before nesting a `_`-prefixed block inside a parent that only declares `@theme`, verify by checking existing templates or presets for a precedent. If none exists, do not edit the parent schema; choose another existing allowed block or report that the request needs Liquid/theme-code work outside this JSON-only skill.
 3. **Build the allowed set** — Union of: types from `blocks/` that the parent schema permits, types declared in the parent’s `blocks` array, and section `type` values from `sections/<type>.liquid` for template-level `sections`.
-4. **Only use types in that set.** If the user asks for a layout that no block provides, propose the **closest real types**, copy a working template in the same theme, or note that **adding a new block** is theme development work outside JSON-only edits.
+4. **Only use types in that set.** If the user asks for a layout that no existing block provides, propose the **closest real types**, copy a working template in the same theme, or note that adding a new block or section is theme development work outside JSON-only edits.
 
 ### Step 3 — Check bundled examples (optional)
 
@@ -97,7 +107,7 @@ For each block or section, read `{% schema %}`:
 
 ### Step 6 — Apply theme design controls
 
-Prefer schema-defined design settings over arbitrary `custom_css`. Read the relevant schema first and only emit setting keys and values that exist in the target theme.
+Prefer schema-defined design settings over arbitrary `custom_css`. Read the relevant schema first and only emit setting keys and values that exist in the target theme. Use `custom_css` only when it is already exposed as a JSON setting in the target schema and the user explicitly asks for a CSS-level tweak; otherwise treat CSS needs as outside the JSON-only scope.
 
 **Global design settings (`config/settings_data.json`):**
 
@@ -110,7 +120,7 @@ Prefer schema-defined design settings over arbitrary `custom_css`. Read the rele
 
 - Use section settings for broad bands of layout and styling: spacing, width, margins, colors, borders, alignment, visibility, behavior, and background media when the section schema supports them.
 - Select values must be exact schema options. Do not invent pixel strings, CSS utility strings, animation names, or class names.
-- If a section exposes custom CSS, entries must be complete CSS rules with selectors, e.g. `.rte { text-transform: uppercase; }`. Do not use standalone declarations or selectorless rules.
+- If a section exposes `custom_css` and the user explicitly asks for a CSS-level tweak, entries must be complete CSS rules with selectors, e.g. `.rte { text-transform: uppercase; }`. Do not use standalone declarations or selectorless rules, and do not add or edit stylesheet files.
 
 **Block settings (`blocks/*.liquid`):**
 
@@ -172,9 +182,9 @@ Follow Shopify’s JSON template shape. If the theme ships **Cursor rules** (e.g
 Shopify sanitizes HTML in `richtext` and `text` (rich) settings. Only a limited set of tags and attributes are allowed:
 
 - **Allowed tags:** `p`, `h1`–`h6`, `ul`, `ol`, `li`, `a`, `br`, `strong`, `em`, `span`
-- **No `style` attributes** — `<span style="color: red">` will be stripped. Use `<em>` or `<strong>` tags instead, then add CSS rules in the section/block stylesheet targeting those tags (e.g. `.my-section em { color: var(--accent); font-style: normal; }`).
+- **No `style` attributes** — `<span style="color: red">` will be stripped. Use schema-defined rich text or typography settings where available; otherwise note the gap instead of adding inline styles, stylesheet rules, custom Liquid, or new assets.
 - **No `class` attributes** on inline elements in richtext.
-- If the design requires colored text within a single text block, this is a **CSS customization gap**—note it and add a stylesheet rule rather than using inline styles.
+- If the design requires colored text within a single text block and no existing JSON setting supports it, this is a **theme-code customization gap**. Note it instead of adding inline styles, stylesheet rules, custom Liquid, or new assets.
 
 ### Step 8 — Validate
 
@@ -233,14 +243,14 @@ Do not start a duplicate dev server if one is already running. Prefer the existi
 | ----------------------- | ---------------------------------------------------------------- |
 | Block/section not found | Search `blocks/` and `sections/`; suggest close matches          |
 | Invalid nesting         | Re-read parent `{% schema %}` `blocks` array                     |
-| `_` block not allowed   | Block has `_` prefix; add it explicitly to parent schema `blocks` array—`@theme` won't match it |
-| `style` attr stripped   | Shopify sanitizes richtext; use `<em>`/`<strong>` + CSS instead of inline styles |
+| `_` block not allowed   | Block has `_` prefix; choose an existing allowed block or report that schema/Liquid work is outside this JSON-only skill |
+| `style` attr stripped   | Shopify sanitizes richtext; use schema-defined text settings where available; otherwise note the theme-code customization gap |
 | Range step violation    | Read the schema `step` value; round your value to the nearest valid step       |
 | Invalid select value    | Only use values from the schema `options` array; don't invent CSS expressions  |
 | Mockup image copied     | Remove screenshot-derived image values; preserve the layout with valid empty image/media blocks |
 | Schema too large        | Copy patterns from a working template in the same theme          |
 | Ambiguous request       | Ask which template file and which section/block instances change |
-| Generated theme output  | Edit source per theme docs, then build                           |
+| Generated theme output  | Edit the source only when the source-of-truth path is JSON/settings data; otherwise report that theme-code work is outside this skill |
 
 
 ## Further reading
