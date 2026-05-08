@@ -1,34 +1,43 @@
 ---
-name: theme-skill  
-description: Edits Shopify JSON template files using your theme's actual existing block and section types. This is for JSON-only updates, not custom Liquid.
+name: theme-skill
+description: Edit Shopify theme JSON templates, settings data, and settings schema using the target theme's existing sections, blocks, nested block structures, and schema-defined settings. Use when updating, editing, or tweaking Shopify `templates/*.json`, JSON section data, `config/settings_data.json`, `config/settings_schema.json`, section settings, or block settings. Do not use for custom Liquid, new theme sections or blocks, snippets, assets, JavaScript, CSS, checkout extensions, or non-JSON theme-code work.
 ---
 
-## Core constraint — JSON edits only
+## Overview
 
-This skill is for updating, editing, and tweaking Shopify **JSON**: `templates/*.json`, JSON section data, `config/settings_data.json`, and schema-defined section/block settings inside those JSON files.
+Use this skill to update Shopify themes through **JSON-only** changes. Supported files include `templates/*.json`, JSON section data, `config/settings_data.json`, `config/settings_schema.json`, and schema-defined section or block settings inside JSON files.
 
-Agents using this skill must **not write, create, or modify custom Liquid**. Do not add new files under `sections/`, `blocks/`, `snippets/`, `assets/`, or other theme code paths. Do not create new section types, block types, snippets, JavaScript, stylesheets, or Liquid schema to make a design possible.
+Treat existing Liquid schemas as read-only references. Do not write, create, or modify custom Liquid, and do not add new files under `sections/`, `blocks/`, `snippets/`, `assets/`, or other theme-code paths.
 
 Use only **existing** sections, blocks, nested block structures, and settings already provided by the target theme. If the requested design cannot be represented with the theme's existing JSON templates, section types, block types, and schema settings, state the gap and propose the closest JSON-only result.
 
 ## When to use
 
-Use when the task involves Shopify **JSON templates** under `templates/` (e.g. `product.json`, `index.json`, alternates like `page.contact.json`), **section JSON** that references **theme blocks** from `blocks/` in block-based themes, or theme design settings that can be safely expressed through `config/settings_data.json`, section settings, or block settings.
+Use this skill when the task involves:
 
-**This skill does not cover:**
+- Shopify **JSON templates** under `templates/`, such as `product.json`, `index.json`, or alternate templates like `page.contact.json`
+- Section JSON that references existing theme blocks from `blocks/` in block-based themes
+- Theme design settings that can be safely expressed through `config/settings_data.json`, `config/settings_schema.json`, section settings, or block settings
+- Global setting schema updates in `config/settings_schema.json`, when the requested control belongs in Shopify's JSON settings schema
+- Layout, content, color, typography, spacing, visibility, or behavior tweaks that are already exposed by the theme's JSON settings and schemas
+- Translating a screenshot, design mockup, or written request into the closest JSON-only structure supported by the target theme
 
-- `config/settings_schema.json` schema development
+## When not to use
+
+Do not use this skill for:
+
 - Checkout branding or Checkout UI extensions
 - Theme app extension code under `extensions/`
 - Creating or editing **Liquid** `.liquid` files, including new sections, blocks, snippets, schemas, or theme assets
 - Replacing **Liquid** `.liquid` templates where the theme has not adopted JSON for that route
+- Creating new section types, block types, snippets, JavaScript, stylesheets, assets, or Liquid schema to make a design possible
 
-If the theme uses a **build step** that generates JSON templates or settings data, read that theme’s README and edit the JSON/settings source of truth. If the source of truth is Liquid, JavaScript, CSS, or schema code, report that the task is outside this JSON-only skill.
+If the theme uses a **build step** that generates JSON templates, settings data, or settings schema, read that theme’s README and edit the JSON/settings source of truth. If the source of truth is Liquid, JavaScript, CSS, or non-JSON theme code, report that the task is outside this skill.
 
 ## Quick start
 
 1. **Understand requirements** — Parse prompts or images for layout, columns/rows, content types, and styling (see **Design images and mockups** when the input is visual).
-2. **Stay JSON-only** — Treat existing Liquid schemas as read-only references. Edit Shopify JSON only.
+2. **Stay JSON-only** — Treat existing Liquid schemas as read-only references. Edit Shopify JSON only, including `config/settings_schema.json` when global setting schema changes are requested.
 3. **Discover allowed block types** — List `blocks/` and read parent `{% schema %}` so every `type` you use exists in this theme (required; see below).
 4. **(Optional) Check bundled examples** — If `examples/` is present, follow **Choosing the best example to reference** in [examples/README.md](examples/README.md): compare the workspace theme to each indexed example and open at most one best-matched file. If nothing fits, copy patterns from existing `templates/*.json` in the workspace theme instead. Never emit `type` strings from a bundled example until they appear in the target theme’s allowed set.
 5. **Map to real blocks** — Choose types only from that allowed set; resolve section `type` from existing `sections/*.liquid` for template-level JSON.
@@ -125,10 +134,12 @@ When using this theme's generic blocks, common upload-only range traps include:
 
 Prefer schema-defined design settings over arbitrary `custom_css`. Read the relevant schema first and only emit setting keys and values that exist in the target theme. Use `custom_css` only when it is already exposed as a JSON setting in the target schema and the user explicitly asks for a CSS-level tweak; otherwise treat CSS needs as outside the JSON-only scope.
 
-**Global design settings (`config/settings_data.json`):**
+**Global design settings (`config/settings_schema.json` and `config/settings_data.json`):**
 
 - Use global settings for broad storefront-wide changes, such as site-wide colors, typography systems, spacing defaults, radii, and border defaults.
-- Before editing global values, read `config/settings_schema.json` and `config/settings_data.json`. Preserve the existing `current` object shape and only update keys that exist in the schema.
+- Use `config/settings_schema.json` for global setting definitions exposed in the theme editor, and `config/settings_data.json` for the active values of those settings.
+- Before editing global values, read both files. Preserve the existing `current` object shape and keep setting IDs, value types, defaults, and options aligned between schema and data.
+- When adding or changing a global schema setting, follow the surrounding schema group structure and Shopify setting types. Do not use settings schema changes as a back door for custom Liquid, JavaScript, CSS, new sections, or new blocks.
 - Do not create arbitrary color scheme IDs, utility class values, or token names. Use existing settings data and schema-listed options.
 - Use global changes only when the requested design should affect the whole storefront. For one page, one template, or one section, prefer section/block settings.
 
