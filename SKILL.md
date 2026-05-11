@@ -37,15 +37,16 @@ If the theme uses a **build step** that generates JSON templates, settings data,
 ## Quick start
 
 1. **Understand requirements** — Parse prompts or images for layout, columns/rows, content types, and styling (see **Design images and mockups** when the input is visual).
-2. **Stay JSON-only** — Treat existing Liquid schemas as read-only references. Edit Shopify JSON only, including `config/settings_schema.json` when global setting schema changes are requested.
+2. **Stay JSON-only** — Treat existing Liquid schemas as read-only references. Edit Shopify JSON only, including `config/settings_data.json` and `config/settings_schema.json` when global design settings are part of the request.
 3. **Discover allowed block types** — List `blocks/` and read parent `{% schema %}` so every `type` you use exists in this theme (required; see below).
 4. **(Optional) Check bundled examples** — If `examples/` is present, follow **Choosing the best example to reference** in [examples/README.md](examples/README.md): compare the workspace theme to each indexed example and open at most one best-matched file. If nothing fits, copy patterns from existing `templates/*.json` in the workspace theme instead. Never emit `type` strings from a bundled example until they appear in the target theme’s allowed set.
 5. **Map to real blocks** — Choose types only from that allowed set; resolve section `type` from existing `sections/*.liquid` for template-level JSON.
 6. **Analyze schemas** — Read each existing block or section `{% schema %}` for allowed children, setting IDs, types, defaults, and presets.
-7. **Build a settings ledger** — Before writing JSON, record the schema constraints for every setting you plan to emit.
-8. **Apply theme design settings** — Map colors, typography, spacing, borders, and behavior to real global/section/block settings declared by the target theme.
-9. **Compile JSON** — Build valid `sections`, nested `blocks`, and `order` / `block_order` arrays per Shopify’s template structure.
-10. **Validate by strict upload** — Skip Theme Check for JSON template edits; use Shopify's strict upload validator before finishing.
+7. **Run the global settings pass** — For a new page, homepage, landing page, or screenshot/mockup translation, read `config/settings_schema.json` and `config/settings_data.json` before writing the template. Update active global typography, colors, color schemes, radii, borders, and button defaults when they are needed to match the design, unless the user explicitly asks for template-only changes.
+8. **Build a settings ledger** — Before writing JSON, record the schema constraints for every global, section, and block setting you plan to emit.
+9. **Apply theme design settings** — Map colors, typography, spacing, borders, and behavior to real global/section/block settings declared by the target theme.
+10. **Compile JSON** — Build valid `sections`, nested `blocks`, and `order` / `block_order` arrays per Shopify’s template structure.
+11. **Validate by strict upload** — Skip Theme Check for JSON template edits; use Shopify's strict upload validator before finishing.
 
 ## Workflow
 
@@ -69,6 +70,7 @@ If the theme uses a **build step** that generates JSON templates, settings data,
 When the user provides a screenshot, Figma export, or design mockup:
 
 - **Extract:** structure (sections, columns, stacking order), content types, and qualitative spacing rhythm (tight vs airy), not exact pixel values unless provided separately.
+- **Default to a global settings pass:** for a full-page mockup or brand-specific page, assume `config/settings_data.json` likely needs first-pass updates for typography, palette, color schemes, gradients, button styles, radii, borders, and global spacing defaults. Skip this only when the user explicitly asks for template-only work or the existing globals already match the mockup.
 - **Ignore images in source files:** do not copy, crop, recreate, download, duplicate, generate, or invent image assets from screenshots, Figma exports, mockups, or other source files. Use those images only to infer where image/media blocks belong.
 - **Use empty image blocks or sections:** when the design calls for hero, product, lifestyle, logo, or decorative imagery, add the valid image/media block or section with its image setting omitted or blank. Assume the user or merchant will provide final images in the theme editor.
 - **Only wire explicit assets:** set image/media values only when the user provides existing theme asset filenames, Shopify media IDs/references, already-selected section settings, or files they explicitly ask to use as storefront assets.
@@ -126,6 +128,32 @@ For every section or block type you will emit, collect the schema constraints fo
 
 Common upload-only range traps vary by theme. After selecting a bundled example reference, consult that reference for theme-specific setting families and common validation failures. Regardless of theme, every emitted range value must match the target schema's `min`, `max`, and `step`.
 
+### Run a global settings pass for new pages and mockups
+
+When creating or heavily revising a page from a screenshot, Figma export, brand reference, or other visual mockup, treat global settings as part of the normal first pass. A page can have the correct sections and still look wrong if the active theme typography, colors, radii, and button defaults remain from another brand.
+
+Before editing the target template:
+
+1. Read `config/settings_schema.json` to identify real global setting IDs, setting types, range constraints, select options, and color scheme structure.
+2. Read `config/settings_data.json` to inspect the active `current` values and existing `color_schemes`.
+3. Compare the mockup against the active global system:
+   - Typography: body font, heading font, base size, scale ratio, heading line heights, heading case, button typography.
+   - Colors: body foreground/background, primary/secondary/tertiary button colors, mobile bar, overlay colors, links.
+   - Color schemes: section backgrounds, foregrounds, borders, hover colors, and gradients.
+   - Shape and borders: button radius, input radius, element/card radius, border widths.
+   - Defaults that affect the page globally: margins, gaps, button size/style defaults, and any theme-specific design tokens.
+4. Update `config/settings_data.json` when the visual direction depends on those global values. Then point template sections/blocks at those real global choices through their schema-defined settings.
+
+For full-page visual work, prefer this order of responsibility:
+
+- **Global settings first** for the overall brand system: typography scale, palette, color schemes, gradients, button defaults, radii, and border defaults.
+- **Section settings second** for page composition: background scheme assignment, spacing, margins, alignment, and behavior.
+- **Block settings last** for local exceptions: a specific heading size, local color override, local alignment, or one-off visibility rule.
+
+Avoid using block-level custom font sizes for ordinary body, label, button, and product-card text on the first pass. Prefer the theme's default typography tokens and global typography settings. Reserve block-level custom font sizes for intentional display headings or user-requested exact art direction.
+
+If the theme supports custom color schemes in `settings_data.json`, prefer creating or updating named schemes for distinctive mockup palettes and gradients, then assign sections with schema-supported settings such as `color_type: "custom"` and `color_scheme_custom`. Do not invent a color scheme structure; mirror the shape used by existing schemes in the active theme data.
+
 ### Step 6 — Apply theme design controls
 
 Prefer schema-defined design settings over arbitrary `custom_css`. Read the relevant schema first and only emit setting keys and values that exist in the target theme. Use `custom_css` only when it is already exposed as a JSON setting in the target schema and the user explicitly asks for a CSS-level tweak; otherwise treat CSS needs as outside the JSON-only scope.
@@ -135,9 +163,12 @@ Prefer schema-defined design settings over arbitrary `custom_css`. Read the rele
 - Use global settings for broad storefront-wide changes, such as site-wide colors, typography systems, spacing defaults, radii, and border defaults.
 - Use `config/settings_schema.json` for global setting definitions exposed in the theme editor, and `config/settings_data.json` for the active values of those settings.
 - Before editing global values, read both files. Preserve the existing `current` object shape and keep setting IDs, value types, defaults, and options aligned between schema and data.
+- For a new page, homepage, landing page, or full-page visual mockup, update `config/settings_data.json` by default when the current globals do not match the requested visual direction. Do not wait for a second user prompt to tune typography, palette, color schemes, radii, borders, or button defaults.
+- If a page mockup needs distinctive section backgrounds or gradients, prefer named `color_schemes` in `config/settings_data.json` plus section assignments over repeated local color overrides.
+- For typography, prefer global type settings and default richtext/button tokens. Avoid custom block font sizes for ordinary text unless the user asks for precise local art direction; reserve local custom sizing for exceptional hero/display headings.
 - When adding or changing a global schema setting, follow the surrounding schema group structure and Shopify setting types. Do not use settings schema changes as a back door for custom Liquid, JavaScript, CSS, new sections, or new blocks.
-- Do not create arbitrary color scheme IDs, utility class values, or token names. Use existing settings data and schema-listed options.
-- Use global changes only when the requested design should affect the whole storefront. For one page, one template, or one section, prefer section/block settings.
+- Do not create arbitrary utility class values or token names. Use schema-listed options. When creating new color scheme IDs is supported by the theme's existing settings data shape, use descriptive IDs and complete settings objects that match existing schemes.
+- Use global changes when the requested design establishes or changes the storefront's visual system. For a narrow one-section tweak that should not affect the storefront, prefer section/block settings.
 
 **Section settings (`sections/*.liquid`):**
 
@@ -273,6 +304,8 @@ Do not start a duplicate dev server if one is already running. Prefer the existi
 - Setting keys and value types match `{% schema %}`
 - Range values land on valid steps (`min + N*step`) for every range setting present in JSON, including values hidden by `visible_if`
 - Select values match an `options[].value` exactly
+- When creating or heavily revising a page from a mockup, `config/settings_data.json` was inspected and either updated or deliberately left unchanged because the active globals already matched the design
+- Global `settings_data.json` changes were validated against `config/settings_schema.json` for existing/changed range values, select values, value types, and complete color scheme objects
 - Images from source files are ignored; use empty image/media blocks or sections unless explicit storefront asset values were provided
 - No `style` or `class` attributes in richtext content strings
 - `_`-prefixed blocks are explicitly listed (not just `@theme`) in every parent they nest inside

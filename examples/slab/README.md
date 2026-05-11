@@ -65,14 +65,17 @@ Slab exposes most visual changes through schema settings. Prefer these existing 
 
 ### Global design settings (`config/settings_data.json`)
 
-- Use global settings for broad storefront-wide changes: body foreground/background, color schemes, theme fonts, heading/body/button typography systems, default margins/gaps, button/input/element radii, and global border widths.
+- For new pages, homepages, landing pages, or full-page visual mockups, make a global settings pass by default before editing the template. Read `config/settings_schema.json` and `config/settings_data.json`, then update active globals when the current typography, palette, color schemes, radii, borders, or button defaults do not match the requested design. Skip only for explicitly template-only work or when the active globals already match.
+- Use global settings for broad storefront-wide changes: body foreground/background, color schemes and gradients, theme fonts, heading/body/button typography systems, default margins/gaps, button/input/element radii, and global border widths.
 - Before editing global values, read `config/settings_schema.json` and `config/settings_data.json`. Preserve the existing `current` object shape and only update keys that exist in the schema.
 - Key global families in Slab include:
   - Colors: `color_schemes`, `color_body_background`, `color_body_foreground`, `color_error`, `color_success`, `color_mobile_bar`, `color_overlay_background`, `color_links_type`, `color_links_custom`.
   - Typography: `type_font_body`, `type_font_heading`, `type_font_subheading`, `type_font_accent`, plus heading/button type controls such as `type_button_font`, `type_button_line_height`, `type_button_letter_spacing`, `type_button_case`, and `type_heading_*`.
   - Shape and borders: `border_button_radius`, `border_input_radius`, `border_element_radius`, `border_button_width`.
-- Do not create arbitrary color scheme IDs. If `color_type: "custom"` uses `color_scheme_custom`, pick an existing scheme ID from `settings_data.json` / the theme editor data. Otherwise use `color_type: "base"` with schema-listed utility class values.
-- Use global changes only when the requested design should affect the whole storefront. For one homepage or one section, prefer section/block settings.
+- Use named `color_schemes` for distinctive section backgrounds and gradients, then assign sections with `color_type: "custom"` and `color_scheme_custom`. Match the existing Slab color scheme object shape exactly.
+- Prefer global typography and default richtext/button size tokens for ordinary text. Avoid local custom font sizes for body, label, button, and product-card text unless the user asks for exact local art direction; reserve local custom sizes for intentional display headings.
+- Do not create arbitrary utility class values or token names. If `color_type: "custom"` uses `color_scheme_custom`, use an existing scheme ID or create a complete new scheme in `settings_data.json` that matches the existing structure. Otherwise use `color_type: "base"` with schema-listed utility class values.
+- Use global changes when the requested design establishes the page or storefront's visual system. For a narrow one-section tweak that should not affect the storefront, prefer section/block settings.
 
 ### Section settings (`sections/section.liquid`)
 
